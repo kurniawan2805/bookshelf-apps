@@ -51,11 +51,12 @@ const addBook = () => {
 
   books.push(bookObj);
   document.dispatchEvent(new Event(RENDER_EVENT));
-  // console.log(books);
+  console.log(books);
 };
 
 // prepare render for a book
 const makeBook = (book) => {
+  // <!-- <article class="book_item">--> -->
   // <!-- <h3>Book Title</h3>
   // <p>Penulis: John Doe</p>
   // <p>Tahun: 2002</p>
@@ -75,21 +76,45 @@ const makeBook = (book) => {
   textTitle.innerText = title;
 
   const textAuthor = document.createElement("p");
-  textAuthor.innerText = author;
+  textAuthor.innerText = `Penulis: ${author}`;
 
   const textYear = document.createElement("p");
-  textYear.innerText = year;
+  textYear.innerText = `Tahun: ${year}`;
 
-  const textContainer = document.createElement("article");
-  textContainer.classList.add("book_item");
-  textContainer.append(textTitle, textAuthor, textYear);
+  // const textContainer = document.createElement("div");
+  // textContainer.classList.add("book_item");
+  // textContainer.append(textTitle, textAuthor, textYear);
 
-  const container = document.createElement("div");
-  container.classList.add();
+  const container = document.createElement("article");
+  container.classList.add("book_item");
+  container.append(textTitle, textAuthor, textYear);
+
+  const buttonContainer = document.createElement("div");
+  buttonContainer.classList.add("action");
+
   if (isCompleted) {
+    const undoRead = document.createElement("button");
+    undoRead.classList.add("green");
+    undoRead.innerText = "Belum selesai di Baca";
+
+    const deleteBook = document.createElement("button");
+    deleteBook.classList.add("red");
+    deleteBook.innerText = "Hapus buku";
+
+    buttonContainer.append(undoRead, deleteBook);
+  } else {
     const doneRead = document.createElement("button");
     doneRead.classList.add("green");
+    doneRead.innerText = "Selesai dibaca";
+
+    const deleteBook = document.createElement("button");
+    deleteBook.classList.add("red");
+    deleteBook.innerText = "Hapus buku";
+
+    buttonContainer.append(doneRead, deleteBook);
   }
+  container.append(buttonContainer);
+  return container;
 };
 
 // render event
@@ -113,6 +138,12 @@ document.addEventListener(RENDER_EVENT, () => {
   unreadBooks.innerHTML = "";
 
   for (let book of books) {
+    const bookElemen = makeBook(book);
+    if (book.isCompleted) {
+      readBooks.append(bookElemen);
+    } else {
+      unreadBooks.append(bookElemen);
+    }
   }
 });
 
