@@ -17,7 +17,8 @@ const STORAGE_KEY = "BOOKSHELF_APP";
 
 // generate unique id
 const generateId = () => {
-  return +new Date();
+  // return +new Date();
+  return (Math.random() + 1).toString().split(".")[1];
 };
 
 // generate book object
@@ -74,6 +75,16 @@ const makeBook = (book) => {
   const buttonContainer = document.createElement("div");
   buttonContainer.classList.add("action");
 
+  // add feature edit book
+  const editBook = document.createElement("button");
+  editBook.classList.add("red");
+  editBook.innerText = "Edit buku";
+  editBook.addEventListener("click", () => {
+    handleEditBook(id);
+  });
+
+  buttonContainer.append(editBook);
+
   if (isCompleted) {
     const undoRead = document.createElement("button");
     undoRead.classList.add("green");
@@ -82,14 +93,14 @@ const makeBook = (book) => {
       handleUndoRead(id);
     });
 
-    const deleteBook = document.createElement("button");
-    deleteBook.classList.add("red");
-    deleteBook.innerText = "Hapus buku";
-    deleteBook.addEventListener("click", () => {
-      handleDeleteBook(id);
-    });
+    // const deleteBook = document.createElement("button");
+    // deleteBook.classList.add("red");
+    // deleteBook.innerText = "Hapus buku";
+    // deleteBook.addEventListener("click", () => {
+    //   handleDeleteBook(id);
+    // });
 
-    buttonContainer.append(undoRead, deleteBook);
+    buttonContainer.append(undoRead);
   } else {
     const doneRead = document.createElement("button");
     doneRead.classList.add("green");
@@ -98,27 +109,38 @@ const makeBook = (book) => {
       handleDoneRead(id);
     });
 
-    const deleteBook = document.createElement("button");
-    deleteBook.classList.add("red");
-    deleteBook.innerText = "Hapus buku";
-    deleteBook.addEventListener("click", () => {
-      handleDeleteBook(id);
-    });
+    // const deleteBook = document.createElement("button");
+    // deleteBook.classList.add("red");
+    // deleteBook.innerText = "Hapus buku";
+    // deleteBook.addEventListener("click", () => {
+    //   handleDeleteBook(id);
+    // });
 
-    buttonContainer.append(doneRead, deleteBook);
+    buttonContainer.append(doneRead);
   }
+
+  const deleteBook = document.createElement("button");
+  deleteBook.classList.add("red");
+  deleteBook.innerText = "Hapus buku";
+  deleteBook.addEventListener("click", () => {
+    handleDeleteBook(id);
+  });
+  buttonContainer.append(deleteBook);
   container.append(buttonContainer);
   return container;
 };
 
 //handle event function
 const handleDeleteBook = (id) => {
-  books.splice(books.indexOf(id), 1);
-
   if (confirm("Apakah Anda yakin akan menghapus buku?")) {
     // Delete it!
+    const idx = books.findIndex((book) => book.id === id);
+    if (idx >= 0) {
+      books.splice(idx, 1);
+    }
     filteredBooks = [...books];
     document.dispatchEvent(new Event(RENDER_EVENT));
+    console.log(books, deletedItem, id);
     console.log("Buku terhapus");
     saveData();
   } else {
@@ -140,6 +162,28 @@ const handleUndoRead = (id) => {
   saveData();
 };
 
+const handleEditBook = (id) => {
+  if (confirm("Apakah Anda ingin mengedit buku?")) {
+    // Edit it!
+    const idx = books.findIndex((book) => book.id === id);
+    books.splice(idx, 1);
+    filteredBooks = [...books];
+
+    // prepare form with edited book
+    document.getElementById("inputBookTitle").value = books[idx].title;
+    document.getElementById("inputBookAuthor").value = books[idx].author;
+    document.getElementById("inputBookYear").value = books[idx].year;
+    document.getElementById("inputBookIsComplete").checked =
+      books[idx].isCompleted;
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+    // not saved yet, will be saved after click add book or another event
+    alert("Silakan edit buku Anda!");
+  } else {
+    // Do nothing!
+  }
+};
+
 // search book by title
 const searchBook = () => {
   const element = document.getElementById("searchBookTitle");
@@ -152,8 +196,6 @@ const searchBook = () => {
   } else {
     filteredBooks = [...books];
   }
-  // clear search title
-  // element.value = "";
 };
 
 // render event
@@ -164,18 +206,16 @@ document.addEventListener("DOMContentLoaded", () => {
   submitForm.addEventListener("submit", (e) => {
     e.preventDefault();
     addBook();
-    // searchBook();
     filteredBooks = [...books];
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
   });
 
+  // triger when filter book
   searchForm.addEventListener("submit", (e) => {
     e.preventDefault();
     searchBook();
     document.dispatchEvent(new Event(RENDER_EVENT));
-
-    // filter book
   });
 
   // add saved storage
@@ -193,11 +233,11 @@ document.addEventListener(RENDER_EVENT, () => {
   unreadBooks.innerHTML = "";
 
   for (let book of filteredBooks) {
-    const bookElemen = makeBook(book);
+    const bookElement = makeBook(book);
     if (book.isCompleted) {
-      readBooks.append(bookElemen);
+      readBooks.append(bookElement);
     } else {
-      unreadBooks.append(bookElemen);
+      unreadBooks.append(bookElement);
     }
   }
 });
