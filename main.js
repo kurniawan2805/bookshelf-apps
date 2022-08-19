@@ -9,7 +9,8 @@
 }
 */
 
-const books = [];
+let books = [];
+let filteredBooks = [];
 const RENDER_EVENT = "render-bookshelf";
 const SAVED_EVENT = "saved-bookshelf";
 const STORAGE_KEY = "BOOKSHELF_APP";
@@ -50,26 +51,11 @@ const addBook = () => {
   );
 
   books.push(bookObj);
-  document.dispatchEvent(new Event(RENDER_EVENT));
-  console.log(books);
+  // console.log(books);
 };
 
 // prepare render for a book
 const makeBook = (book) => {
-  // <!-- <article class="book_item">--> -->
-  // <!-- <h3>Book Title</h3>
-  // <p>Penulis: John Doe</p>
-  // <p>Tahun: 2002</p>
-
-  // <div class="action">
-  //   <button class="green">Selesai dibaca</button>
-  //   <button class="red">Hapus buku</button>
-  // </div> -->
-
-  // <div class="action">
-  //           <button class="green">Belum selesai di Baca</button>
-  //           <button class="red">Hapus buku</button>
-  //         </div> -->
   const { id, title, author, year, isCompleted } = book;
 
   const textTitle = document.createElement("h3");
@@ -80,10 +66,6 @@ const makeBook = (book) => {
 
   const textYear = document.createElement("p");
   textYear.innerText = `Tahun: ${year}`;
-
-  // const textContainer = document.createElement("div");
-  // textContainer.classList.add("book_item");
-  // textContainer.append(textTitle, textAuthor, textYear);
 
   const container = document.createElement("article");
   container.classList.add("book_item");
@@ -96,20 +78,32 @@ const makeBook = (book) => {
     const undoRead = document.createElement("button");
     undoRead.classList.add("green");
     undoRead.innerText = "Belum selesai di Baca";
+    undoRead.addEventListener("click", () => {
+      handleUndoRead(id);
+    });
 
     const deleteBook = document.createElement("button");
     deleteBook.classList.add("red");
     deleteBook.innerText = "Hapus buku";
+    deleteBook.addEventListener("click", () => {
+      handleDeleteBook(id);
+    });
 
     buttonContainer.append(undoRead, deleteBook);
   } else {
     const doneRead = document.createElement("button");
     doneRead.classList.add("green");
     doneRead.innerText = "Selesai dibaca";
+    doneRead.addEventListener("click", () => {
+      handleDoneRead(id);
+    });
 
     const deleteBook = document.createElement("button");
     deleteBook.classList.add("red");
     deleteBook.innerText = "Hapus buku";
+    deleteBook.addEventListener("click", () => {
+      handleDeleteBook(id);
+    });
 
     buttonContainer.append(doneRead, deleteBook);
   }
@@ -117,16 +111,77 @@ const makeBook = (book) => {
   return container;
 };
 
+//handle event function
+const handleDeleteBook = (id) => {
+  books.splice(books.indexOf(id), 1);
+
+  if (confirm("Apakah Anda yakin akan menghapus buku?")) {
+    // Delete it!
+    filteredBooks = [...books];
+    document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
+    console.log("Buku terhapus");
+  } else {
+    // Do nothing!
+  }
+};
+
+const handleDoneRead = (id) => {
+  const idx = books.findIndex((book) => book.id === id);
+  books[idx].isCompleted = true;
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+};
+
+const handleUndoRead = (id) => {
+  const idx = books.findIndex((book) => book.id === id);
+  books[idx].isCompleted = false;
+  document.dispatchEvent(new Event(RENDER_EVENT));
+  saveData();
+};
+
+// search book by title
+const searchBook = () => {
+  const element = document.getElementById("searchBookTitle");
+  let searchTitle = element.value.trim().toLowerCase();
+
+  if (searchTitle && searchTitle.trim().length > 0) {
+    filteredBooks = books.filter((book) => {
+      return book.title.includes(searchTitle);
+    });
+  } else {
+    filteredBooks = [...books];
+  }
+  // clear search title
+  element.value = "";
+};
+
 // render event
 document.addEventListener("DOMContentLoaded", () => {
   const submitForm = document.getElementById("inputBook");
+  const searchForm = document.getElementById("searchBook");
 
   submitForm.addEventListener("submit", (e) => {
     e.preventDefault();
     addBook();
+    // searchBook();
+    filteredBooks = [...books];
+    document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
+  });
+
+  searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    searchBook();
+    document.dispatchEvent(new Event(RENDER_EVENT));
+
+    // filter book
   });
 
   // add saved storage
+  if (isStorageExist()) {
+    loadDataFromStorage();
+  }
 });
 
 document.addEventListener(RENDER_EVENT, () => {
@@ -137,7 +192,7 @@ document.addEventListener(RENDER_EVENT, () => {
   readBooks.innerHTML = "";
   unreadBooks.innerHTML = "";
 
-  for (let book of books) {
+  for (let book of filteredBooks) {
     const bookElemen = makeBook(book);
     if (book.isCompleted) {
       readBooks.append(bookElemen);
@@ -147,14 +202,39 @@ document.addEventListener(RENDER_EVENT, () => {
   }
 });
 
-// let hasRead = [];
+// handle local storatge
+function isStorageExist() /* boolean */ {
+  if (typeof Storage === undefined) {
+    alert("Browser kamu tidak mendukung local storage");
+    return false;
+  }
+  return true;
+}
 
-// hasRead.push({
-//   id: +new Date(),
-//   title: "Harry Potter and the Philosopher's Stone",
-//   author: "J.K Rowling",
-//   year: 1997,
-//   isComplete: false,
-// });
+// save data to local storage
+function saveData() {
+  if (isStorageExist()) {
+    const parsed /* string */ = JSON.stringify(books);
+    localStorage.setItem(STORAGE_KEY, parsed);
+    document.dispatchEvent(new Event(SAVED_EVENT));
+  }
+}
 
-// console.log(hasRead);
+// load data from local storage
+function loadDataFromStorage() {
+  const serializedData /* string */ = localStorage.getItem(STORAGE_KEY);
+  let data = JSON.parse(serializedData);
+
+  if (data !== null) {
+    for (const book of data) {
+      books.push(book);
+    }
+    filteredBooks = [...books];
+  }
+
+  document.dispatchEvent(new Event(RENDER_EVENT));
+}
+
+document.addEventListener(SAVED_EVENT, () => {
+  console.log("Data berhasil di simpan.");
+});
