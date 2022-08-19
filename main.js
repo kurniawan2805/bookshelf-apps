@@ -119,8 +119,8 @@ const handleDeleteBook = (id) => {
     // Delete it!
     filteredBooks = [...books];
     document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
     console.log("Buku terhapus");
+    saveData();
   } else {
     // Do nothing!
   }
@@ -153,7 +153,7 @@ const searchBook = () => {
     filteredBooks = [...books];
   }
   // clear search title
-  element.value = "";
+  // element.value = "";
 };
 
 // render event
