@@ -166,15 +166,15 @@ const handleEditBook = (id) => {
   if (confirm("Apakah Anda ingin mengedit buku?")) {
     // Edit it!
     const idx = books.findIndex((book) => book.id === id);
-    books.splice(idx, 1);
-    filteredBooks = [...books];
+    const editedItem = books.splice(idx, 1);
 
+    filteredBooks = [...books];
     // prepare form with edited book
-    document.getElementById("inputBookTitle").value = books[idx].title;
-    document.getElementById("inputBookAuthor").value = books[idx].author;
-    document.getElementById("inputBookYear").value = books[idx].year;
+    document.getElementById("inputBookTitle").value = editedItem[0].title;
+    document.getElementById("inputBookAuthor").value = editedItem[0].author;
+    document.getElementById("inputBookYear").value = editedItem[0].year;
     document.getElementById("inputBookIsComplete").checked =
-      books[idx].isCompleted;
+      editedItem[0].isCompleted;
 
     document.dispatchEvent(new Event(RENDER_EVENT));
     // not saved yet, will be saved after click add book or another event
