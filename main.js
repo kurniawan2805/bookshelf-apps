@@ -206,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
   submitForm.addEventListener("submit", (e) => {
     e.preventDefault();
     addBook();
+    sortedBook();
     filteredBooks = [...books];
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
@@ -242,6 +243,22 @@ document.addEventListener(RENDER_EVENT, () => {
   }
 });
 
+// sort books by author
+const sortedBook = () => {
+  // sort of item by author name
+  books.sort((a, b) => {
+    let fa = a.author.toLowerCase();
+    let fb = b.author.toLowerCase();
+    if (fa < fb) {
+      return -1;
+    }
+    if (fa > fb) {
+      return 1;
+    }
+    return 0;
+  });
+};
+
 // handle local storatge
 function isStorageExist() /* boolean */ {
   if (typeof Storage === undefined) {
@@ -269,6 +286,7 @@ function loadDataFromStorage() {
     for (const book of data) {
       books.push(book);
     }
+    sortedBook();
     filteredBooks = [...books];
   }
 
