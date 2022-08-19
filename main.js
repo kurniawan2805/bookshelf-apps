@@ -206,6 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
   submitForm.addEventListener("submit", (e) => {
     e.preventDefault();
     addBook();
+    alert("Buku berhasil ditambah!");
     sortedBook();
     filteredBooks = [...books];
     document.dispatchEvent(new Event(RENDER_EVENT));
